@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const GOLD = "#c8a96e";
 const BG = "#0a0a0a";
@@ -188,6 +188,17 @@ export default function Home() {
     social: 0,
     indulgent: 0,
   });
+  const [isEmbed, setIsEmbed] = useState(false);
+
+  useEffect(() => {
+    setIsEmbed(new URLSearchParams(window.location.search).get("embed") === "true");
+  }, []);
+
+  useEffect(() => {
+    if (!isEmbed) return;
+    const height = document.documentElement.scrollHeight;
+    window.parent.postMessage({ type: "coffee-quiz-height", height }, "*");
+  }, [view, isEmbed]);
 
   function startQuiz() {
     setCurrentQuestion(0);
@@ -220,7 +231,7 @@ export default function Home() {
     }
   }
 
-  if (view === "welcome") return <WelcomeScreen onStart={startQuiz} />;
+  if (view === "welcome") return <WelcomeScreen onStart={startQuiz} isEmbed={isEmbed} />;
   if (view === "quiz")
     return (
       <QuizScreen
@@ -231,28 +242,30 @@ export default function Home() {
         onNext={nextQuestion}
       />
     );
-  return <ResultsScreen scores={scores} onRetake={startQuiz} />;
+  return <ResultsScreen scores={scores} onRetake={startQuiz} isEmbed={isEmbed} />;
 }
 
 // ─── Welcome Screen ───────────────────────────────────────────────────────────
 
-function WelcomeScreen({ onStart }: { onStart: () => void }) {
+function WelcomeScreen({ onStart, isEmbed }: { onStart: () => void; isEmbed: boolean }) {
   return (
     <div
       style={{ background: BG, minHeight: "100vh" }}
       className="flex flex-col items-center justify-center px-6 py-16"
     >
       <div className="max-w-lg w-full text-center">
-        <p
-          style={{
-            color: GOLD,
-            fontFamily: "var(--font-bebas-neue), sans-serif",
-            letterSpacing: "0.2em",
-          }}
-          className="text-sm mb-8 uppercase"
-        >
-          Basecamp Coffee
-        </p>
+        {!isEmbed && (
+          <p
+            style={{
+              color: GOLD,
+              fontFamily: "var(--font-bebas-neue), sans-serif",
+              letterSpacing: "0.2em",
+            }}
+            className="text-sm mb-8 uppercase"
+          >
+            Basecamp Coffee
+          </p>
+        )}
 
         <h1
           style={{
@@ -421,9 +434,11 @@ function QuizScreen({
 function ResultsScreen({
   scores,
   onRetake,
+  isEmbed,
 }: {
   scores: Record<PersonalityKey, number>;
   onRetake: () => void;
+  isEmbed: boolean;
 }) {
   const total = 5;
 
@@ -440,16 +455,18 @@ function ResultsScreen({
     >
       <div className="max-w-xl w-full">
         {/* Header */}
-        <p
-          style={{
-            color: GOLD,
-            fontFamily: "var(--font-bebas-neue), sans-serif",
-            letterSpacing: "0.2em",
-          }}
-          className="text-sm mb-3 uppercase text-center"
-        >
-          Basecamp Coffee
-        </p>
+        {!isEmbed && (
+          <p
+            style={{
+              color: GOLD,
+              fontFamily: "var(--font-bebas-neue), sans-serif",
+              letterSpacing: "0.2em",
+            }}
+            className="text-sm mb-3 uppercase text-center"
+          >
+            Basecamp Coffee
+          </p>
+        )}
         <h2
           style={{
             fontFamily: "var(--font-bebas-neue), sans-serif",
